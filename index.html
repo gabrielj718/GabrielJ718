@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB Home Rentals | Property Management in Okaloosa, Escambia & Santa Rosa Counties, FL</title>
+<meta name="description" content="Full-service property management for Northwest Florida homeowners with an in-house handyman and construction team for fast turnovers and asset protection.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: { ink: '#0b1220', navy: '#111a2e', slate2: '#1b2740', gold: { DEFAULT: '#c9a24b', light: '#e0c27a', dark: '#a8832f' } },
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Playfair Display', 'Georgia', 'serif'] }
+    } }
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+  .field { width:100%; border:1px solid #cbd5e1; border-radius:.5rem; padding:.7rem .9rem; font-size:.95rem; background:#fff; color:#0f172a; transition:border-color .15s, box-shadow .15s; }
+  .field:focus { outline:none; border-color:#c9a24b; box-shadow:0 0 0 3px rgba(201,162,75,.25); }
+  .field.invalid { border-color:#dc2626; }
+  .err { color:#dc2626; font-size:.75rem; margin-top:.25rem; display:none; }
+  .field.invalid + .err, .invalid-wrap .err { display:block; }
+  .hero-bg { background: radial-gradient(1200px 500px at 80% -10%, rgba(201,162,75,.18), transparent 60%), linear-gradient(135deg,#0b1220 0%,#111a2e 55%,#16233f 100%); }
+  .grid-lines { background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px); background-size: 56px 56px; }
+  .tab-active { background:#c9a24b; color:#0b1220; }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+</style>
+</head>
+<body class="font-sans text-slate-800 antialiased bg-white">
+
+<!-- Top bar -->
+<div class="bg-ink text-slate-300 text-xs">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2">
+    <span>Serving Okaloosa · Escambia · Santa Rosa Counties, FL</span>
+    <span class="flex gap-4">
+      <a href="tel:+18505550123" class="hover:text-gold-light">(850) 555-0123</a>
+      <a href="mailto:info@gbhomerentals.com" class="hover:text-gold-light hidden sm:inline">info@gbhomerentals.com</a>
+    </span>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-ink/95 backdrop-blur border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-3" aria-label="GB Home Rentals home">
+      <span class="w-10 h-10 rounded-md border border-gold grid place-items-center font-serif text-gold text-lg font-bold">GB</span>
+      <span class="leading-tight">
+        <span class="block font-serif text-white text-lg tracking-wide">GB Home Rentals</span>
+        <span class="block text-[10px] uppercase tracking-[.25em] text-gold">Property Management</span>
+      </span>
+    </a>
+    <nav class="hidden lg:flex items-center gap-7 text-sm text-slate-200" aria-label="Primary">
+      <a href="#services" class="hover:text-gold-light">Services</a>
+      <a href="#handyman" class="hover:text-gold-light">In-House Construction</a>
+      <a href="#areas" class="hover:text-gold-light">Areas Served</a>
+      <a href="#process" class="hover:text-gold-light">How It Works</a>
+      <a href="#faq" class="hover:text-gold-light">FAQ</a>
+      <a href="#get-started" class="bg-gold hover:bg-gold-light text-ink font-semibold px-5 py-2.5 rounded-md transition">Get Free Analysis</a>
+    </nav>
+    <button id="menuBtn" class="lg:hidden text-white p-2" aria-label="Open menu" aria-expanded="false" aria-controls="mobileNav">
+      <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h20M3 13h20M3 19h20"/></svg>
+    </button>
+  </div>
+  <nav id="mobileNav" class="hidden lg:hidden bg-navy border-t border-white/10 px-4 py-4 space-y-3 text-slate-200 text-sm">
+    <a href="#services" class="block">Services</a>
+    <a href="#handyman" class="block">In-House Construction</a>
+    <a href="#areas" class="block">Areas Served</a>
+    <a href="#process" class="block">How It Works</a>
+    <a href="#faq" class="block">FAQ</a>
+    <a href="#get-started" class="block bg-gold text-ink font-semibold text-center py-3 rounded-md">Get Free Analysis</a>
+  </nav>
+</header>
+
+<main id="top">
+<!-- Hero -->
+<section class="hero-bg relative overflow-hidden">
+  <div class="grid-lines absolute inset-0"></div>
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 lg:py-24 grid lg:grid-cols-5 gap-12 items-center">
+    <div class="lg:col-span-3">
+      <p class="inline-block text-xs uppercase tracking-[.25em] text-gold border border-gold/40 rounded-full px-4 py-1.5 mb-6">Northwest Florida's Hands-On Property Managers</p>
+      <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl text-white leading-tight">Your rental, <span class="text-gold">managed and maintained</span> by one accountable team.</h1>
+      <p class="mt-6 text-lg text-slate-300 max-w-2xl">Full-service management for single-family homes, condos and small multifamily in Okaloosa, Escambia and Santa Rosa Counties, backed by our own in-house handyman and construction crew for faster turnovers and lower repair costs.</p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a href="#get-started" data-tab="qualify" class="cta-tab bg-gold hover:bg-gold-light text-ink font-semibold px-7 py-3.5 rounded-md transition">Get My Free Rental Analysis</a>
+        <a href="#handyman" class="border border-white/30 hover:border-gold text-white px-7 py-3.5 rounded-md transition">See Our Construction Division</a>
+      </div>
+      <dl class="mt-12 grid grid-cols-3 gap-6 max-w-xl">
+        <div><dt class="text-xs uppercase tracking-wider text-slate-400">Counties</dt><dd class="text-3xl font-serif text-white">3</dd></div>
+        <div><dt class="text-xs uppercase tracking-wider text-slate-400">Maintenance</dt><dd class="text-3xl font-serif text-white">In-House</dd></div>
+        <div><dt class="text-xs uppercase tracking-wider text-slate-400">Owner Reports</dt><dd class="text-3xl font-serif text-white">Monthly</dd></div>
+      </dl>
+    </div>
+    <div class="lg:col-span-2">
+      <div class="bg-white rounded-xl shadow-2xl p-6 sm:p-7 border-t-4 border-gold">
+        <h2 class="font-serif text-2xl text-ink">Request Information</h2>
+        <p class="text-sm text-slate-500 mt-1 mb-5">Quick questions? We reply within one business day.</p>
+        <form id="contactForm" novalidate class="space-y-4" data-form="general-inquiry">
+          <div>
+            <label class="block text-sm font-medium mb-1" for="c_name">Full name *</label>
+            <input class="field" id="c_name" name="name" required autocomplete="name">
+            <p class="err">Please enter your name.</p>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1" for="c_email">Email *</label>
+              <input class="field" id="c_email" name="email" type="email" required autocomplete="email">
+              <p class="err">Enter a valid email.</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1" for="c_phone">Phone *</label>
+              <input class="field" id="c_phone" name="phone" type="tel" required autocomplete="tel" placeholder="(850) 555-0123">
+              <p class="err">Enter a 10-digit phone number.</p>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="c_msg">How can we help?</label>
+            <textarea class="field" id="c_msg" name="message" rows="3" maxlength="600" placeholder="Tell us about your property or questions…"></textarea>
+          </div>
+          <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+          <button class="w-full bg-ink hover:bg-slate2 text-white font-semibold py-3.5 rounded-md transition" type="submit">Send Request</button>
+          <p class="form-status text-sm text-center" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Trust strip -->
+<section class="bg-navy border-y border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-sm text-slate-300">
+    <div><span class="text-gold font-semibold">Licensed</span><br>Florida property management</div>
+    <div><span class="text-gold font-semibold">Transparent</span><br>Online owner statements</div>
+    <div><span class="text-gold font-semibold">Local</span><br>Boots on the ground, Gulf Coast</div>
+    <div><span class="text-gold font-semibold">Accountable</span><br>One team, repairs to rent</div>
+  </div>
+</section>
+
+<!-- Services -->
+<section id="services" class="py-20 bg-slate-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="max-w-2xl mb-12">
+      <p class="text-gold-dark text-xs uppercase tracking-[.25em] font-semibold">What We Handle</p>
+      <h2 class="font-serif text-3xl sm:text-4xl text-ink mt-2">Full-service management, start to finish</h2>
+      <p class="mt-4 text-slate-600">Everything required to keep your property rented, protected and profitable.</p>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="serviceGrid"></div>
+  </div>
+</section>
+
+<!-- Handyman USP -->
+<section id="handyman" class="py-20 bg-ink text-white relative overflow-hidden">
+  <div class="grid-lines absolute inset-0 opacity-60"></div>
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-14 items-center">
+    <div>
+      <p class="text-gold text-xs uppercase tracking-[.25em] font-semibold">The GB Difference</p>
+      <h2 class="font-serif text-3xl sm:text-4xl mt-2 leading-tight">Our own handyman &amp; construction crew. <span class="text-gold">No middlemen.</span></h2>
+      <p class="mt-5 text-slate-300">Most managers dispatch third-party vendors and add markup and delay. GB Home Rentals keeps skilled tradespeople in-house, so vacancies shrink, repairs are done right, and your asset keeps its value.</p>
+      <ul class="mt-8 space-y-4">
+        <li class="flex gap-3"><span class="text-gold mt-1">&#10003;</span><span><strong>Rapid turnovers.</strong> Paint, flooring, cleaning coordination and punch-list in days, not weeks.</span></li>
+        <li class="flex gap-3"><span class="text-gold mt-1">&#10003;</span><span><strong>Lower repair costs.</strong> Direct labor with no third-party vendor markup.</span></li>
+        <li class="flex gap-3"><span class="text-gold mt-1">&#10003;</span><span><strong>Asset preservation.</strong> Preventive inspections catch roof, plumbing, HVAC and moisture issues early.</span></li>
+        <li class="flex gap-3"><span class="text-gold mt-1">&#10003;</span><span><strong>Renovation capability.</strong> Kitchens, baths, decks, storm repair and value-add upgrades under one roof.</span></li>
+      </ul>
+      <a href="#get-started" data-tab="qualify" class="cta-tab inline-block mt-9 bg-gold hover:bg-gold-light text-ink font-semibold px-7 py-3.5 rounded-md transition">Qualify My Property</a>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-slate2/70 border border-white/10 rounded-xl p-6"><div class="text-3xl mb-3">&#128295;</div><h3 class="font-semibold">Maintenance &amp; Repairs</h3><p class="text-sm text-slate-400 mt-1">Plumbing, electrical, appliances, doors, drywall and more.</p></div>
+      <div class="bg-slate2/70 border border-white/10 rounded-xl p-6"><div class="text-3xl mb-3">&#127912;</div><h3 class="font-semibold">Turnover Prep</h3><p class="text-sm text-slate-400 mt-1">Paint, flooring, deep-clean coordination, rent-ready checks.</p></div>
+      <div class="bg-slate2/70 border border-white/10 rounded-xl p-6"><div class="text-3xl mb-3">&#127959;</div><h3 class="font-semibold">Construction</h3><p class="text-sm text-slate-400 mt-1">Remodels, additions, decks, fencing and storm restoration.</p></div>
+      <div class="bg-slate2/70 border border-white/10 rounded-xl p-6"><div class="text-3xl mb-3">&#128269;</div><h3 class="font-semibold">Inspections</h3><p class="text-sm text-slate-400 mt-1">Move-in/out and routine inspections with photo documentation.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Areas -->
+<section id="areas" class="py-20">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="max-w-2xl mb-12">
+      <p class="text-gold-dark text-xs uppercase tracking-[.25em] font-semibold">Areas Served</p>
+      <h2 class="font-serif text-3xl sm:text-4xl text-ink mt-2">Three counties. One local team.</h2>
+      <p class="mt-4 text-slate-600">From the Emerald Coast to Pensacola, we manage where we work, so response times stay fast.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <article class="border border-slate-200 rounded-xl p-7 hover:shadow-xl hover:-translate-y-1 transition">
+        <h3 class="font-serif text-2xl text-ink">Okaloosa County</h3>
+        <p class="text-sm text-gold-dark font-semibold mt-1">Emerald Coast</p>
+        <p class="mt-4 text-slate-600 text-sm">Fort Walton Beach, Destin, Crestview, Niceville, Valparaiso, Mary Esther, Shalimar.</p>
+        <a href="#get-started" class="mt-5 inline-block text-sm font-semibold text-ink underline decoration-gold underline-offset-4">Manage a property here &rarr;</a>
+      </article>
+      <article class="border border-slate-200 rounded-xl p-7 hover:shadow-xl hover:-translate-y-1 transition">
+        <h3 class="font-serif text-2xl text-ink">Escambia County</h3>
+        <p class="text-sm text-gold-dark font-semibold mt-1">Pensacola Area</p>
+        <p class="mt-4 text-slate-600 text-sm">Pensacola, Pensacola Beach, Perdido Key, Cantonment, Century, Molino, Gulf Breeze border areas.</p>
+        <a href="#get-started" class="mt-5 inline-block text-sm font-semibold text-ink underline decoration-gold underline-offset-4">Manage a property here &rarr;</a>
+      </article>
+      <article class="border border-slate-200 rounded-xl p-7 hover:shadow-xl hover:-translate-y-1 transition">
+        <h3 class="font-serif text-2xl text-ink">Santa Rosa County</h3>
+        <p class="text-sm text-gold-dark font-semibold mt-1">Gulf Breeze to Navarre</p>
+        <p class="mt-4 text-slate-600 text-sm">Milton, Navarre, Gulf Breeze, Pace, Jay, Holley, Midway.</p>
+        <a href="#get-started" class="mt-5 inline-block text-sm font-semibold text-ink underline decoration-gold underline-offset-4">Manage a property here &rarr;</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Process -->
+<section id="process" class="py-20 bg-slate-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="max-w-2xl mb-12">
+      <p class="text-gold-dark text-xs uppercase tracking-[.25em] font-semibold">How It Works</p>
+      <h2 class="font-serif text-3xl sm:text-4xl text-ink mt-2">Onboard in four simple steps</h2>
+    </div>
+    <ol class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <li class="bg-white rounded-xl p-6 border border-slate-200"><span class="font-serif text-4xl text-gold">01</span><h3 class="font-semibold mt-2">Free Analysis</h3><p class="text-sm text-slate-600 mt-1">Share your property details; we estimate rent and scope.</p></li>
+      <li class="bg-white rounded-xl p-6 border border-slate-200"><span class="font-serif text-4xl text-gold">02</span><h3 class="font-semibold mt-2">Walkthrough</h3><p class="text-sm text-slate-600 mt-1">We inspect the home and our crew flags rent-ready upgrades.</p></li>
+      <li class="bg-white rounded-xl p-6 border border-slate-200"><span class="font-serif text-4xl text-gold">03</span><h3 class="font-semibold mt-2">Market &amp; Place</h3><p class="text-sm text-slate-600 mt-1">Professional marketing and tenant screening.</p></li>
+      <li class="bg-white rounded-xl p-6 border border-slate-200"><span class="font-serif text-4xl text-gold">04</span><h3 class="font-semibold mt-2">Relax &amp; Earn</h3><p class="text-sm text-slate-600 mt-1">Rent collected, repairs handled, statements delivered monthly.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- Lead capture (tabbed) -->
+<section id="get-started" class="py-20 bg-navy">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-8">
+      <p class="text-gold text-xs uppercase tracking-[.25em] font-semibold">Get Started</p>
+      <h2 class="font-serif text-3xl sm:text-4xl text-white mt-2">Find out what your property can earn</h2>
+      <p class="text-slate-400 mt-3">Choose the quick inquiry, or complete the property qualification for a tailored proposal.</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+      <div class="grid grid-cols-2 text-sm font-semibold bg-slate-100" role="tablist">
+        <button role="tab" id="tab-qualify" data-tab="qualify" class="tab py-4 tab-active" aria-selected="true">Property Qualification</button>
+        <button role="tab" id="tab-info" data-tab="info" class="tab py-4 text-slate-600" aria-selected="false">General Information</button>
+      </div>
+
+      <!-- Qualification form -->
+      <form id="qualifyForm" novalidate class="p-6 sm:p-8 space-y-5" data-form="property-qualification" role="tabpanel">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="block text-sm font-medium mb-1" for="q_name">Full name *</label><input class="field" id="q_name" name="name" required autocomplete="name"><p class="err">Please enter your name.</p></div>
+          <div><label class="block text-sm font-medium mb-1" for="q_email">Email *</label><input class="field" id="q_email" name="email" type="email" required autocomplete="email"><p class="err">Enter a valid email.</p></div>
+          <div><label class="block text-sm font-medium mb-1" for="q_phone">Phone *</label><input class="field" id="q_phone" name="phone" type="tel" required autocomplete="tel" placeholder="(850) 555-0123"><p class="err">Enter a 10-digit phone number.</p></div>
+          <div><label class="block text-sm font-medium mb-1" for="q_county">County *</label>
+            <select class="field" id="q_county" name="county" required><option value="">Select county</option><option>Okaloosa</option><option>Escambia</option><option>Santa Rosa</option><option>Other / Not sure</option></select><p class="err">Select a county.</p></div>
+        </div>
+        <div><label class="block text-sm font-medium mb-1" for="q_address">Property address or city *</label><input class="field" id="q_address" name="address" required autocomplete="street-address"><p class="err">Enter the property address or city.</p></div>
+        <div class="grid sm:grid-cols-3 gap-4">
+          <div><label class="block text-sm font-medium mb-1" for="q_type">Property type *</label>
+            <select class="field" id="q_type" name="propertyType" required><option value="">Select</option><option>Single-family home</option><option>Condo / Townhome</option><option>Duplex / Small multifamily</option><option>Vacation / Short-term rental</option></select><p class="err">Select a type.</p></div>
+          <div><label class="block text-sm font-medium mb-1" for="q_year">Year built *</label><input class="field" id="q_year" name="yearBuilt" type="number" inputmode="numeric" min="1850" max="2100" placeholder="e.g. 1998" required><p class="err">Enter a valid year (1850 to present).</p></div>
+          <div><label class="block text-sm font-medium mb-1" for="q_beds">Bedrooms *</label>
+            <select class="field" id="q_beds" name="bedrooms" required><option value="">Select</option><option>Studio</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select><p class="err">Select bedrooms.</p></div>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="block text-sm font-medium mb-1" for="q_status">Current status *</label>
+            <select class="field" id="q_status" name="status" required><option value="">Select</option><option>Vacant</option><option>Tenant-occupied</option><option>Owner-occupied (planning to rent)</option><option>Currently self-managed</option><option>Needs repairs before renting</option></select><p class="err">Select current status.</p></div>
+          <div><label class="block text-sm font-medium mb-1" for="q_time">When do you need a manager? *</label>
+            <select class="field" id="q_time" name="timeframe" required><option value="">Select</option><option>Immediately</option><option>Within 30 days</option><option>1 to 3 months</option><option>3 to 6 months</option><option>Just researching</option></select><p class="err">Select a timeframe.</p></div>
+        </div>
+        <fieldset>
+          <legend class="block text-sm font-medium mb-2">Interested in our in-house services? <span class="text-slate-400 font-normal">(optional)</span></legend>
+          <div class="grid sm:grid-cols-2 gap-2 text-sm">
+            <label class="flex items-center gap-2"><input type="checkbox" name="services" value="Turnover prep" class="accent-yellow-600"> Turnover prep &amp; make-ready</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name="services" value="Repairs" class="accent-yellow-600"> Repairs &amp; maintenance</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name="services" value="Renovation" class="accent-yellow-600"> Renovation / construction</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name="services" value="Inspection" class="accent-yellow-600"> Property inspection</label>
+          </div>
+        </fieldset>
+        <div><label class="block text-sm font-medium mb-1" for="q_notes">Anything else we should know?</label><textarea class="field" id="q_notes" name="notes" rows="3" maxlength="800"></textarea></div>
+        <label class="flex items-start gap-2 text-xs text-slate-500"><input type="checkbox" id="q_consent" required class="mt-0.5 accent-yellow-600"><span>I agree to be contacted by GB Home Rentals about my property by phone, email or text. Message and data rates may apply.</span></label>
+        <p class="err" id="q_consent_err">Consent is required so we can contact you.</p>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+        <button class="w-full bg-gold hover:bg-gold-light text-ink font-bold py-4 rounded-md transition" type="submit">Get My Free Rental Analysis</button>
+        <p class="form-status text-sm text-center" role="status" aria-live="polite"></p>
+      </form>
+
+      <!-- General info form -->
+      <form id="infoForm" novalidate class="p-6 sm:p-8 space-y-5 hidden" data-form="general-information" role="tabpanel">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="block text-sm font-medium mb-1" for="i_name">Full name *</label><input class="field" id="i_name" name="name" required autocomplete="name"><p class="err">Please enter your name.</p></div>
+          <div><label class="block text-sm font-medium mb-1" for="i_email">Email *</label><input class="field" id="i_email" name="email" type="email" required autocomplete="email"><p class="err">Enter a valid email.</p></div>
+        </div>
+        <div><label class="block text-sm font-medium mb-1" for="i_phone">Phone <span class="text-slate-400 font-normal">(optional)</span></label><input class="field" id="i_phone" name="phone" type="tel" autocomplete="tel"><p class="err">Enter a 10-digit phone number.</p></div>
+        <div><label class="block text-sm font-medium mb-1" for="i_msg">Your question *</label><textarea class="field" id="i_msg" name="message" rows="4" maxlength="800" required placeholder="Fees, services, coverage areas…"></textarea><p class="err">Please tell us how we can help.</p></div>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+        <button class="w-full bg-ink hover:bg-slate2 text-white font-bold py-4 rounded-md transition" type="submit">Send Message</button>
+        <p class="form-status text-sm text-center" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="py-20">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6">
+    <h2 class="font-serif text-3xl sm:text-4xl text-ink text-center mb-10">Frequently asked questions</h2>
+    <div class="divide-y divide-slate-200 border-y border-slate-200">
+      <details class="group py-5"><summary class="cursor-pointer font-semibold text-ink flex justify-between">What does your handyman division cover?<span class="text-gold group-open:rotate-45 transition">+</span></summary><p class="mt-3 text-slate-600 text-sm">Routine repairs, turnover make-ready, inspections and larger construction or renovation projects, performed by our in-house team.</p></details>
+      <details class="group py-5"><summary class="cursor-pointer font-semibold text-ink flex justify-between">Which areas do you serve?<span class="text-gold group-open:rotate-45 transition">+</span></summary><p class="mt-3 text-slate-600 text-sm">Okaloosa, Escambia and Santa Rosa Counties in Northwest Florida. Not sure if you're in range? Send us the address.</p></details>
+      <details class="group py-5"><summary class="cursor-pointer font-semibold text-ink flex justify-between">How are management fees structured?<span class="text-gold group-open:rotate-45 transition">+</span></summary><p class="mt-3 text-slate-600 text-sm">Fees depend on property type and scope. Complete the qualification form and we'll send a clear, itemized proposal with no hidden charges.</p></details>
+      <details class="group py-5"><summary class="cursor-pointer font-semibold text-ink flex justify-between">Do you manage properties that need work?<span class="text-gold group-open:rotate-45 transition">+</span></summary><p class="mt-3 text-slate-600 text-sm">Yes. Our construction crew can scope and complete upgrades so the home is rent-ready and competitive.</p></details>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="bg-ink text-slate-400 text-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid md:grid-cols-3 gap-8">
+    <div>
+      <div class="flex items-center gap-3 mb-3"><span class="w-9 h-9 rounded-md border border-gold grid place-items-center font-serif text-gold font-bold">GB</span><span class="font-serif text-white text-lg">GB Home Rentals</span></div>
+      <p>Full-service property management with in-house handyman and construction services.</p>
+    </div>
+    <div>
+      <h3 class="text-white font-semibold mb-3">Contact</h3>
+      <p><a href="tel:+18505550123" class="hover:text-gold-light">(850) 555-0123</a></p>
+      <p><a href="mailto:info@gbhomerentals.com" class="hover:text-gold-light">info@gbhomerentals.com</a></p>
+      <p class="mt-2">Okaloosa · Escambia · Santa Rosa Counties, FL</p>
+    </div>
+    <div>
+      <h3 class="text-white font-semibold mb-3">Sister Brand</h3>
+      <a href="https://gbrealtygroupfl.com" class="hover:text-gold-light" rel="noopener">GB Realty Group &rarr;</a>
+    </div>
+  </div>
+  <div class="border-t border-white/10 py-5 text-center text-xs">&copy; <span id="yr"></span> GB Home Rentals. All rights reserved. Equal Housing Opportunity.</div>
+</footer>
+
+<script>
+(function () {
+  // ---- CONFIG: set to your form backend (Formspree, Make, Zapier webhook, etc.). If empty, submissions are simulated.
+  var FORM_ENDPOINT = '';
+
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Mobile menu
+  var menuBtn = document.getElementById('menuBtn'), mobileNav = document.getElementById('mobileNav');
+  menuBtn.addEventListener('click', function () {
+    var open = mobileNav.classList.toggle('hidden') === false;
+    menuBtn.setAttribute('aria-expanded', String(open));
+  });
+  mobileNav.addEventListener('click', function (e) { if (e.target.tagName === 'A') { mobileNav.classList.add('hidden'); menuBtn.setAttribute('aria-expanded', 'false'); } });
+
+  // Services grid
+  var services = [
+    ['Tenant Placement', 'Pro photos, listing syndication, thorough screening and lease signing.'],
+    ['Rent Collection', 'Online payments, late-fee enforcement and prompt owner disbursements.'],
+    ['Maintenance & Repairs', 'Handled by our in-house crew, with 24/7 emergency response.'],
+    ['Inspections', 'Move-in, move-out and routine inspections with photo reports.'],
+    ['Financial Reporting', 'Monthly statements, year-end 1099s and an owner portal.'],
+    ['Legal & Compliance', 'Florida-compliant leases, notices and fair-housing practices.']
+  ];
+  document.getElementById('serviceGrid').innerHTML = services.map(function (s, i) {
+    return '<article class="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-lg hover:border-gold transition">' +
+      '<span class="w-10 h-10 grid place-items-center rounded-md bg-ink text-gold font-serif mb-4">' + (i + 1) + '</span>' +
+      '<h3 class="font-semibold text-ink">' + s[0] + '</h3><p class="text-sm text-slate-600 mt-1">' + s[1] + '</p></article>';
+  }).join('');
+
+  // Tabs
+  var forms = { qualify: document.getElementById('qualifyForm'), info: document.getElementById('infoForm') };
+  function showTab(name) {
+    Object.keys(forms).forEach(function (k) {
+      forms[k].classList.toggle('hidden', k !== name);
+      var t = document.getElementById('tab-' + k);
+      t.classList.toggle('tab-active', k === name);
+      t.classList.toggle('text-slate-600', k !== name);
+      t.setAttribute('aria-selected', String(k === name));
+    });
+  }
+  document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
+  document.querySelectorAll('.cta-tab').forEach(function (a) { a.addEventListener('click', function () { showTab(a.dataset.tab); }); });
+
+  // Validation
+  var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  function digits(v) { return v.replace(/\D/g, ''); }
+  function fieldValid(el) {
+    var v = el.value.trim();
+    if (el.required && !v) return false;
+    if (!v) return true;
+    if (el.type === 'email') return emailRe.test(v);
+    if (el.type === 'tel') { var d = digits(v); if (d.length === 11 && d[0] === '1') d = d.slice(1); return d.length === 10; }
+    if (el.name === 'yearBuilt') { var y = +v; return y >= 1850 && y <= new Date().getFullYear() + 1; }
+    return true;
+  }
+  function mark(el) { el.classList.toggle('invalid', !fieldValid(el)); }
+
+  function formatPhone(el) {
+    var d = digits(el.value).slice(0, 10);
+    if (d.length > 6) el.value = '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+    else if (d.length > 3) el.value = '(' + d.slice(0, 3) + ') ' + d.slice(3);
+    else if (d.length) el.value = '(' + d;
+  }
+
+  function wire(form) {
+    var fields = form.querySelectorAll('input.field, select.field, textarea.field');
+    fields.forEach(function (el) {
+      el.addEventListener('blur', function () { mark(el); });
+      el.addEventListener('input', function () { if (el.classList.contains('invalid')) mark(el); if (el.type === 'tel') formatPhone(el); });
+    });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var status = form.querySelector('.form-status');
+      status.className = 'form-status text-sm text-center';
+      if (form.elements.website && form.elements.website.value) return; // honeypot
+      var firstBad = null;
+      fields.forEach(function (el) { mark(el); if (!firstBad && !fieldValid(el)) firstBad = el; });
+      var consent = form.querySelector('#q_consent'), consentErr = form.querySelector('#q_consent_err');
+      if (consent) {
+        consentErr.style.display = consent.checked ? 'none' : 'block';
+        if (!consent.checked && !firstBad) firstBad = consent;
+      }
+      if (firstBad) { firstBad.focus(); status.textContent = 'Please correct the highlighted fields.'; status.classList.add('text-red-600'); return; }
+
+      var data = { formType: form.dataset.form, submittedAt: new Date().toISOString(), page: location.href };
+      new FormData(form).forEach(function (v, k) {
+        if (k === 'website') return;
+        data[k] = data[k] ? [].concat(data[k], v) : v;
+      });
+      var btn = form.querySelector('button[type=submit]'), label = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Sending…'; btn.classList.add('opacity-70');
+
+      var send = FORM_ENDPOINT
+        ? fetch(FORM_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(data) })
+            .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); })
+        : new Promise(function (res) { console.info('[GB Home Rentals] Form submission (no endpoint configured):', data); setTimeout(res, 600); });
+
+      send.then(function () {
+        form.reset();
+        status.textContent = 'Thank you! A GB Home Rentals team member will contact you within one business day.';
+        status.classList.add('text-green-700', 'font-semibold');
+      }).catch(function () {
+        status.textContent = 'Something went wrong. Please call (850) 555-0123 or try again.';
+        status.classList.add('text-red-600');
+      }).finally(function () {
+        btn.disabled = false; btn.textContent = label; btn.classList.remove('opacity-70');
+      });
+    });
+  }
+  wire(document.getElementById('contactForm'));
+  wire(forms.qualify);
+  wire(forms.info);
+  var ce = document.getElementById('q_consent_err'); ce.style.display = 'none';
+})();
+</script>
+</body>
+</html>
