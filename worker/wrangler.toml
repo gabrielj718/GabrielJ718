@@ -1,0 +1,8 @@
+name = "gb-home-rentals-leads"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# Comma-separated list of sites allowed to post leads. Set this to your real domain(s).
+ALLOWED_ORIGINS = "https://gbhomerentals.com,https://www.gbhomerentals.com"
+FUB_SYSTEM = "GBHomeRentals"

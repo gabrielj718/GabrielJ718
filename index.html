@@ -242,10 +242,23 @@
           <div><label class="block text-sm font-medium mb-1" for="q_name">Full name *</label><input class="field" id="q_name" name="name" required autocomplete="name"><p class="err">Please enter your name.</p></div>
           <div><label class="block text-sm font-medium mb-1" for="q_email">Email *</label><input class="field" id="q_email" name="email" type="email" required autocomplete="email"><p class="err">Enter a valid email.</p></div>
           <div><label class="block text-sm font-medium mb-1" for="q_phone">Phone *</label><input class="field" id="q_phone" name="phone" type="tel" required autocomplete="tel" placeholder="(850) 555-0123"><p class="err">Enter a 10-digit phone number.</p></div>
-          <div><label class="block text-sm font-medium mb-1" for="q_county">County *</label>
-            <select class="field" id="q_county" name="county" required><option value="">Select county</option><option>Okaloosa</option><option>Escambia</option><option>Santa Rosa</option><option>Other / Not sure</option></select><p class="err">Select a county.</p></div>
         </div>
-        <div><label class="block text-sm font-medium mb-1" for="q_address">Property address or city *</label><input class="field" id="q_address" name="address" required autocomplete="street-address"><p class="err">Enter the property address or city.</p></div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2 relative">
+            <label class="block text-sm font-medium mb-1" for="q_address">Property address *</label>
+            <input class="field" id="q_address" name="address" required autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="addrList" placeholder="Start typing the street address…">
+            <p class="err">Enter the property address.</p>
+            <ul id="addrList" role="listbox" class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden text-sm"></ul>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="q_county_display">County</label>
+            <input class="field bg-slate-50" id="q_county_display" readonly tabindex="-1" placeholder="Fills in from the address">
+            <select class="field hidden mt-2" id="q_county_manual" data-skip aria-label="Select county"><option value="">Select county</option><option>Okaloosa</option><option>Escambia</option><option>Santa Rosa</option><option>Other</option></select>
+            <p class="err" id="q_county_err">Select the property's county.</p>
+            <p class="text-xs text-amber-700 mt-1 hidden" id="countyHint">This address is outside our current service area. You can still submit and we'll follow up.</p>
+          </div>
+        </div>
+        <input type="hidden" name="county" id="q_county"><input type="hidden" name="street" id="q_street"><input type="hidden" name="city" id="q_city"><input type="hidden" name="state" id="q_state"><input type="hidden" name="zip" id="q_zip"><input type="hidden" name="placeId" id="q_placeid">
         <div class="grid sm:grid-cols-3 gap-4">
           <div><label class="block text-sm font-medium mb-1" for="q_type">Property type *</label>
             <select class="field" id="q_type" name="propertyType" required><option value="">Select</option><option>Single-family home</option><option>Condo / Townhome</option><option>Duplex / Small multifamily</option><option>Vacation / Short-term rental</option></select><p class="err">Select a type.</p></div>
@@ -329,7 +342,9 @@
 <script>
 (function () {
   // ---- CONFIG: set to your form backend (Formspree, Make, Zapier webhook, etc.). If empty, submissions are simulated.
-  var FORM_ENDPOINT = '';
+  var FORM_ENDPOINT = '';          // URL of the lead proxy (see worker/README.md). It forwards leads to Follow Up Boss.
+  // ---- CONFIG: Google Maps API key (Places API (New) enabled, restricted to your site's domain via HTTP referrers).
+  var GOOGLE_MAPS_API_KEY = '';
 
   document.getElementById('yr').textContent = new Date().getFullYear();
 
@@ -391,8 +406,96 @@
     else if (d.length) el.value = '(' + d;
   }
 
+  // ---- Address autocomplete + automatic county (Google Places API (New)) ----
+  var TARGET_COUNTIES = ['Okaloosa', 'Escambia', 'Santa Rosa'];
+  var addrInput = document.getElementById('q_address'), addrList = document.getElementById('addrList');
+  var countyHidden = document.getElementById('q_county'), countyDisplay = document.getElementById('q_county_display');
+  var manualCounty = document.getElementById('q_county_manual'), countyHint = document.getElementById('countyHint');
+  var placesLib = null, sessionToken = null, suggestions = [], activeIdx = -1, debounceT = null;
+
+  function getCounty() { return countyHidden.value; }
+  function setCounty(name) {
+    countyHidden.value = name || '';
+    countyDisplay.value = name ? name + (name === 'Other' ? '' : ' County') : '';
+    countyHint.classList.toggle('hidden', !name || name === 'Other' || TARGET_COUNTIES.indexOf(name) !== -1);
+    if (name) { document.getElementById('q_county_err').style.display = 'none'; manualCounty.classList.remove('invalid'); }
+  }
+  function setParts(p) {
+    ['street', 'city', 'state', 'zip', 'placeid'].forEach(function (k) { document.getElementById('q_' + k).value = (p && p[k]) || ''; });
+  }
+  function closeList() { addrList.classList.add('hidden'); addrInput.setAttribute('aria-expanded', 'false'); activeIdx = -1; }
+  function renderList() {
+    if (!suggestions.length) { closeList(); return; }
+    addrList.innerHTML = '';
+    suggestions.forEach(function (sg, i) {
+      var li = document.createElement('li');
+      li.setAttribute('role', 'option'); li.id = 'addr-opt-' + i;
+      li.className = 'px-4 py-3 cursor-pointer hover:bg-slate-100' + (i === activeIdx ? ' bg-slate-100' : '');
+      li.textContent = sg.placePrediction.text.text;
+      li.addEventListener('mousedown', function (e) { e.preventDefault(); pick(i); });
+      addrList.appendChild(li);
+    });
+    addrList.classList.remove('hidden'); addrInput.setAttribute('aria-expanded', 'true');
+  }
+  function comp(components, type, short) {
+    for (var i = 0; i < components.length; i++) if (components[i].types.indexOf(type) !== -1) return short ? components[i].shortText : components[i].longText;
+    return '';
+  }
+  function pick(i) {
+    var sg = suggestions[i]; if (!sg) return;
+    var place = sg.placePrediction.toPlace();
+    closeList();
+    addrInput.value = sg.placePrediction.text.text;
+    place.fetchFields({ fields: ['addressComponents', 'formattedAddress'] }).then(function () {
+      var c = place.addressComponents || [];
+      var county = comp(c, 'administrative_area_level_2').replace(/\s+County$/i, '');
+      var number = comp(c, 'street_number'), route = comp(c, 'route');
+      setParts({ street: (number + ' ' + route).trim(), city: comp(c, 'locality') || comp(c, 'sublocality') || comp(c, 'postal_town'), state: comp(c, 'administrative_area_level_1', true), zip: comp(c, 'postal_code'), placeid: place.id || '' });
+      addrInput.value = place.formattedAddress || addrInput.value;
+      addrInput.classList.remove('invalid');
+      if (county) { manualCounty.classList.add('hidden'); setCounty(county); }
+      else { manualCounty.classList.remove('hidden'); setCounty(''); }
+      sessionToken = new placesLib.AutocompleteSessionToken(); // a new session starts after each selection
+    }).catch(function () { manualCounty.classList.remove('hidden'); });
+  }
+  function query(v) {
+    placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      input: v, sessionToken: sessionToken, includedRegionCodes: ['us'],
+      includedPrimaryTypes: ['street_address', 'premise', 'subpremise'],
+      locationBias: { west: -88.0, east: -86.2, south: 30.1, north: 31.1 } // Pensacola to Destin corridor
+    }).then(function (r) { suggestions = (r.suggestions || []).slice(0, 5); activeIdx = -1; renderList(); })
+      .catch(function () { suggestions = []; closeList(); });
+  }
+  addrInput.addEventListener('input', function () {
+    setCounty(''); setParts(null);
+    var v = addrInput.value.trim();
+    if (!placesLib || v.length < 4) { suggestions = []; closeList(); return; }
+    clearTimeout(debounceT); debounceT = setTimeout(function () { query(v); }, 220);
+  });
+  addrInput.addEventListener('keydown', function (e) {
+    if (addrList.classList.contains('hidden')) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, suggestions.length - 1); renderList(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); renderList(); }
+    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); pick(activeIdx); }
+    else if (e.key === 'Escape') closeList();
+  });
+  addrInput.addEventListener('blur', function () { setTimeout(closeList, 120); });
+  manualCounty.addEventListener('change', function () { setCounty(manualCounty.value); });
+
+  // Without a key (or if Google fails to load) the address is typed freely and the county is picked by hand.
+  function autocompleteUnavailable() { manualCounty.classList.remove('hidden'); addrInput.placeholder = 'Street address, city, FL'; }
+  if (GOOGLE_MAPS_API_KEY) {
+    window.__gbMapsReady = function () {
+      google.maps.importLibrary('places').then(function (lib) { placesLib = lib; sessionToken = new lib.AutocompleteSessionToken(); }).catch(autocompleteUnavailable);
+    };
+    var gs = document.createElement('script');
+    gs.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(GOOGLE_MAPS_API_KEY) + '&v=weekly&loading=async&callback=__gbMapsReady';
+    gs.async = true; gs.onerror = autocompleteUnavailable;
+    document.head.appendChild(gs);
+  } else { autocompleteUnavailable(); }
+
   function wire(form) {
-    var fields = form.querySelectorAll('input.field, select.field, textarea.field');
+    var fields = Array.prototype.filter.call(form.querySelectorAll('input.field, select.field, textarea.field'), function (el) { return !el.hasAttribute('data-skip') && !el.readOnly; });
     fields.forEach(function (el) {
       el.addEventListener('blur', function () { mark(el); });
       el.addEventListener('input', function () { if (el.classList.contains('invalid')) mark(el); if (el.type === 'tel') formatPhone(el); });
@@ -404,6 +507,10 @@
       if (form.elements.website && form.elements.website.value) return; // honeypot
       var firstBad = null;
       fields.forEach(function (el) { mark(el); if (!firstBad && !fieldValid(el)) firstBad = el; });
+      if (form.id === 'qualifyForm' && !getCounty()) {
+        manualCounty.classList.remove('hidden'); document.getElementById('q_county_err').style.display = 'block'; manualCounty.classList.add('invalid');
+        if (!firstBad) firstBad = manualCounty;
+      }
       var consent = form.querySelector('#q_consent'), consentErr = form.querySelector('#q_consent_err');
       if (consent) {
         consentErr.style.display = consent.checked ? 'none' : 'block';
