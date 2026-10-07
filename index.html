@@ -599,10 +599,45 @@
     });
   }
   // ---- Chat widget: guided conversation that captures every visitor as a lead ----
-  var chat = { open: false, started: false, step: 'topic', data: {}, sent: false };
+  var PHONE = '(850) 555-0123', PHONE_HREF = 'tel:+18505550123';
+  var chat = { open: false, started: false, step: 'topic', flow: '', qi: 0, data: {}, answers: [], sent: false };
   var chatPanel = document.getElementById('chatPanel'), chatLauncher = document.getElementById('chatLauncher');
   var chatLog = document.getElementById('chatLog'), chatQuick = document.getElementById('chatQuick');
   var chatForm = document.getElementById('chatForm'), chatInput = document.getElementById('chatInput');
+
+  // Guided question flows. Each answer is a tap or typed text; answers are sent with the lead.
+  var FLOWS = {
+    owner: {
+      topic: 'Property management',
+      qs: [
+        { k: 'County', q: 'Which county is the property in?', o: ['Okaloosa', 'Escambia', 'Santa Rosa', 'Not sure yet'],
+          ack: function (a) { return /not sure/i.test(a) ? 'No problem, we can confirm from the address.' : 'Great, ' + a.replace(/ county/i, '') + ' County is one of our core areas.'; } },
+        { k: 'Property type', q: 'What kind of property is it?', o: ['Single-family home', 'Condo / townhome', 'Duplex / multifamily', 'Vacation rental'] },
+        { k: 'Status', q: 'Is it rented right now?', o: ['Vacant', 'Tenant-occupied', 'Planning to rent it', 'Self-managing now'] },
+        { k: 'Timeline', q: 'When would you like a manager in place?', o: ['Right away', 'Within 30 days', 'In 1 to 3 months', 'Just researching'] }
+      ],
+      pitch: 'Thanks, that is everything we need for a first look. Next we prepare a free rental analysis with a suggested rent and an itemized proposal, and our in-house crew flags any upgrades that would help it rent faster.'
+    },
+    repair: {
+      topic: 'Repairs or remodeling',
+      qs: [
+        { k: 'Work needed', q: 'What do you need done?', o: ['Repair or maintenance', 'Turnover prep', 'Remodel / construction', 'Inspection'] },
+        { k: 'Urgency', q: 'How soon?', o: ['Emergency, today', 'This week', 'Within a month', 'Just planning'],
+          ack: function (a) { return /emergency/i.test(a) ? 'For an emergency the fastest route is a call, and I will also pass your details to the team so they can follow up.' : ''; } },
+        { k: 'County', q: 'Which county is the home in?', o: ['Okaloosa', 'Escambia', 'Santa Rosa', 'Not sure yet'] }
+      ],
+      pitch: 'Got it. Our own crew handles this directly, so there are no third-party markups or scheduling delays. Let me get your details so someone can scope it with you.'
+    }
+  };
+
+  var CALL = { t: 'Call ' + PHONE, href: PHONE_HREF };
+  var FAQ = [
+    [/emergenc|urgent|flood|leak|fire|no (water|power|ac|heat)/i, 'If this is an emergency, please call us right now so we can dispatch someone.', true],
+    [/price|fee|cost|how much|percent|charge|rate/i, 'Fees depend on the property type and scope. Every owner gets a clear, itemized proposal with no hidden charges, and the free analysis shows your exact numbers.'],
+    [/where|area|serve|county|pensacola|destin|navarre|milton|crestview|niceville|fort walton|gulf breeze/i, 'We manage in Okaloosa, Escambia and Santa Rosa Counties, from Crestview and Destin to Pensacola, Navarre and Milton.'],
+    [/handyman|construction|in-house|crew|contractor|remodel/i, 'We keep our own handyman and construction crew, so repairs, turnovers, inspections and renovations are done directly with no vendor markup.'],
+    [/call|phone|speak|talk|number|human|person/i, 'You can reach a person any time at ' + PHONE + '.', true]
+  ];
 
   function bubble(text, who) {
     var d = document.createElement('div');
@@ -611,72 +646,166 @@
     b.className = 'max-w-[85%] px-3.5 py-2.5 rounded-2xl ' + (who === 'me' ? 'bg-ink text-white rounded-br-sm' : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm');
     b.textContent = text; d.appendChild(b); chatLog.appendChild(d); chatLog.scrollTop = chatLog.scrollHeight;
   }
-  var typingEl = null;
-  function bot(text, delay) {
-    delay = delay || 350;
-    setTimeout(function () {
-      if (!typingEl) {
-        typingEl = document.createElement('div'); typingEl.className = 'flex';
-        typingEl.innerHTML = '<div class="px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-white border border-slate-200 text-slate-400 tracking-widest" aria-hidden="true">&bull;&bull;&bull;</div>';
-        chatLog.appendChild(typingEl); chatLog.scrollTop = chatLog.scrollHeight;
-      }
-    }, 0);
-    setTimeout(function () { if (typingEl) { typingEl.remove(); typingEl = null; } bubble(text, 'bot'); }, delay + Math.min(text.length * 8, 700));
+  // Bot messages and chips run through one queue so they always appear in order, with a typing indicator.
+  var queue = Promise.resolve();
+  function say(text) {
+    queue = queue.then(function () {
+      return new Promise(function (res) {
+        var t = document.createElement('div'); t.className = 'flex';
+        t.innerHTML = '<div class="px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-white border border-slate-200 text-slate-400 tracking-widest" aria-hidden="true">&bull;&bull;&bull;</div>';
+        chatLog.appendChild(t); chatLog.scrollTop = chatLog.scrollHeight;
+        setTimeout(function () { t.remove(); bubble(text, 'bot'); res(); }, 350 + Math.min(text.length * 9, 800));
+      });
+    });
   }
+  function later(fn) { queue = queue.then(function () { fn(); }); }
   function quick(options) {
     chatQuick.innerHTML = '';
     chatQuick.classList.toggle('hidden', !options.length);
     options.forEach(function (o) {
-      var b = document.createElement('button'); b.type = 'button';
-      b.className = 'border border-gold text-ink hover:bg-gold-light/40 rounded-full px-3 py-1.5 text-xs font-semibold';
-      b.textContent = o; b.addEventListener('click', function () { handle(o); }); chatQuick.appendChild(b);
+      var item = typeof o === 'string' ? { t: o } : o;
+      var b = document.createElement(item.href ? 'a' : 'button');
+      if (item.href) { b.href = item.href; } else { b.type = 'button'; }
+      b.className = (item.href ? 'bg-gold text-ink border border-gold hover:bg-gold-light' : 'border border-gold text-ink hover:bg-gold-light/40') + ' rounded-full px-3 py-1.5 text-xs font-semibold';
+      b.textContent = item.t;
+      b.addEventListener('click', function () {
+        if (item.href && item.href.charAt(0) === '#') { showTab('qualify'); toggleChat(false); }
+        else if (!item.href) handle(item.t);
+      });
+      chatQuick.appendChild(b);
     });
   }
-  function setInput(placeholder, type) { chatInput.placeholder = placeholder; chatInput.type = type || 'text'; chatInput.value = ''; chatInput.focus(); }
+  function setInput(placeholder, type, focus) { chatInput.placeholder = placeholder; chatInput.type = type || 'text'; chatInput.value = ''; if (focus !== false) chatInput.focus(); }
   function chatSend(formType, extra) {
     var d = chat.data, payload = { formType: formType, name: d.name, email: d.email || '', phone: d.phone || '', topic: d.topic, message: extra || '', submittedAt: new Date().toISOString(), page: location.href };
     if (!FORM_ENDPOINT) { console.info('[GB Home Rentals] Chat lead (no endpoint configured):', payload); return; }
     fetch(FORM_ENDPOINT, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(function () {});
   }
+  function summary() { return chat.answers.map(function (a) { return a[0] + ': ' + a[1]; }).join(' | '); }
+  function first() { return (chat.data.name || '').split(/\s+/)[0]; }
+
+  var TOPICS = ['Manage my rental property', 'Repairs or remodeling', 'I’m a current tenant', 'Fees and services', 'Something else'];
   function startChat() {
     if (chat.started) return; chat.started = true;
-    bot('Hi, welcome to GB Home Rentals. What can we help you with?', 200);
-    setTimeout(function () { quick(['Manage my rental property', 'Repairs or remodeling', 'I’m a current tenant', 'Something else']); }, 1100);
-    chatInput.disabled = true;
+    say('Hi, welcome to GB Home Rentals! I can answer quick questions or get you a free rental analysis in about a minute. What brings you here?');
+    later(function () { quick(TOPICS); setInput('Type or tap an option…', 'text', false); });
   }
+  function askNext() {
+    var f = FLOWS[chat.flow], q = f.qs[chat.qi];
+    chat.step = 'q';
+    say(q.q); later(function () { quick(q.o); setInput('Type or tap an option…', 'text', false); });
+  }
+  function askContact() {
+    chat.step = 'name'; chatQuick.innerHTML = ''; chatQuick.classList.add('hidden');
+    say('What’s your name?'); later(function () { setInput('Your full name'); });
+  }
+  function begin(flow) {
+    chat.flow = flow; chat.qi = 0; chat.data.topic = FLOWS[flow].topic;
+    say(flow === 'owner' ? 'Wonderful, we would love to help. A few quick taps and I will have what I need.' : 'Happy to help. A few quick questions first.');
+    askNext();
+  }
+  function answerFaq(text) {
+    for (var i = 0; i < FAQ.length; i++) if (FAQ[i][0].test(text)) { say(FAQ[i][1]); return FAQ[i][2] ? 'call' : 'faq'; }
+    return '';
+  }
+  function finish() {
+    chat.step = 'done'; chatQuick.innerHTML = ''; chatInput.placeholder = 'Anything else? Type here…'; chatInput.type = 'text';
+    say('Thank you, ' + first() + '! A member of our team will contact you within one business day. Want to speed things up?');
+    later(function () { quick([CALL, { t: 'Add property details', href: '#get-started' }]); });
+  }
+
   function handle(text) {
     text = String(text).trim(); if (!text) return;
     bubble(text, 'me'); quick([]);
-    var d = chat.data;
-    switch (chat.step) {
-      case 'topic':
-        if (/tenant/i.test(text)) {
-          chat.step = 'done'; chatInput.disabled = true;
-          bot('Tenants: for repairs or rent questions, call (850) 555-0123. For after-hours emergencies, please say so when you call and we’ll respond right away.', 400);
+    var d = chat.data, f = FLOWS[chat.flow];
+
+    if (chat.step === 'topic') {
+      if (/tenant/i.test(text)) {
+        chat.step = 'tenant'; d.topic = 'Current tenant';
+        say('Happy to help. What do you need?');
+        later(function () { quick(['Report a repair', 'Rent or payment question', 'Lease question', 'Emergency']); });
+      } else if (/repair|remodel|handyman|construction|work done/i.test(text)) { begin('repair'); }
+      else if (/manage|property manager|rental property|rent my|owner/i.test(text) || /analysis/i.test(text)) { begin('owner'); }
+      else if (/fee|service|price|cost/i.test(text)) {
+        say('Great question. We handle tenant placement, rent collection, maintenance, inspections, monthly owner statements and Florida-compliant leases. Fees depend on the property and scope, and you get an itemized proposal with no hidden charges.');
+        later(function () { quick(['Get my free analysis', CALL]); });
+        chat.step = 'topic';
+      } else {
+        d.topic = 'Other'; chat.step = 'free';
+        say('Sure, tell me a bit about what you need and I will point you in the right direction.');
+        later(function () { setInput('Type your question…'); });
+      }
+      return;
+    }
+    if (chat.step === 'tenant') {
+      d.topic = 'Current tenant: ' + text;
+      if (/emergenc/i.test(text)) {
+        chat.step = 'done';
+        say('Please call us right now so we can respond right away. Tell us it is an emergency when you call.');
+        later(function () { quick([CALL]); });
+      } else {
+        chat.step = 'tenant2';
+        say('Thanks. The quickest way to get this handled is a call. Or leave your name and number and we will call you back.');
+        later(function () { quick([CALL, 'Request a callback']); });
+      }
+      return;
+    }
+    if (chat.step === 'tenant2') { chat.flow = ''; d.message = d.topic; askContact(); return; }
+    if (chat.step === 'free') { d.message = text; chat.answers.push(['Message', text]); say('Thanks, that helps.'); askContact(); return; }
+
+    if (chat.step === 'q') {
+      var q = f.qs[chat.qi];
+      var chip = q.o.some(function (o) { return o.toLowerCase() === text.toLowerCase(); });
+      if (!chip) {
+        var r = answerFaq(text);
+        if (r) {
+          later(function () { quick(r === 'call' ? [CALL].concat(q.o.slice(0, 3)) : q.o); });
+          say('Back to your question: ' + q.q);
           return;
         }
-        d.topic = text; chat.step = 'name'; chatInput.disabled = false;
-        bot('Great. What’s your name?'); setInput('Your full name'); break;
-      case 'name':
-        if (text.length < 2) { bot('Please enter your name.'); return; }
-        d.name = text; chat.step = 'phone';
-        bot('Thanks, ' + text.split(/\s+/)[0] + '. What’s the best phone number to reach you? By sharing your details you agree to be contacted by GB Home Rentals by phone, email or text.', 450);
-        setInput('(850) 555-0123', 'tel'); break;
-      case 'phone':
-        var p = digits(text); if (p.length === 11 && p[0] === '1') p = p.slice(1);
-        if (p.length !== 10) { bot('That doesn’t look like a 10-digit number. Try again?'); return; }
-        d.phone = text; chat.step = 'email'; bot('And your email address?'); setInput('you@email.com', 'email'); break;
-      case 'email':
-        if (!emailRe.test(text)) { bot('That email doesn’t look right. Try again?'); return; }
-        d.email = text; chat.step = 'details'; chatSend('chat-lead', '');
-        bot('Got it. Tell us a little more, such as the property address, what you need done, or your timeline. You can also skip this.', 450);
-        quick(['Skip']); setInput('Address, project or questions…'); break;
-      case 'details':
-        chat.step = 'done'; chatInput.disabled = true;
-        if (!/^skip$/i.test(text)) chatSend('chat-details', text);
-        bot('Thank you! A member of our team will contact you within one business day. For something urgent, call (850) 555-0123.', 450);
-        break;
+      }
+      chat.answers.push([q.k, text]);
+      var ack = q.ack ? q.ack(text) : '';
+      if (ack) say(ack);
+      if (/emergency/i.test(text)) later(function () { quick([CALL]); });
+      chat.qi++;
+      if (chat.qi < f.qs.length) { askNext(); }
+      else { say(f.pitch); askContact(); }
+      return;
     }
+    if (chat.step === 'name') {
+      if (text.length < 2) { say('Please enter your name.'); return; }
+      d.name = text; chat.step = 'phone';
+      say('Nice to meet you, ' + first() + '. What is the best phone number to reach you? By sharing your details you agree to be contacted by GB Home Rentals by phone, email or text.');
+      later(function () { setInput('(850) 555-0123', 'tel'); });
+      return;
+    }
+    if (chat.step === 'phone') {
+      var p = digits(text); if (p.length === 11 && p[0] === '1') p = p.slice(1);
+      if (p.length !== 10) { say('That does not look like a 10-digit number. Try again?'); return; }
+      d.phone = text; chat.step = 'email';
+      say('And your email, so we can send your analysis and proposal? You can skip this if you prefer a call.');
+      later(function () { quick(['Skip']); setInput('you@email.com', 'email'); });
+      return;
+    }
+    if (chat.step === 'email') {
+      if (/^skip$/i.test(text)) d.email = '';
+      else if (!emailRe.test(text)) { say('That email does not look right. Try again, or tap Skip.'); later(function () { quick(['Skip']); }); return; }
+      else d.email = text;
+      chat.step = 'details'; chatSend('chat-lead', summary());
+      say('You are all set, ' + first() + '. Last thing: what is the property address, or anything else we should know? You can skip this.');
+      later(function () { quick(['Skip']); setInput('Address, project or questions…'); });
+      return;
+    }
+    if (chat.step === 'details') {
+      if (!/^skip$/i.test(text)) chatSend('chat-details', text + (summary() ? ' | ' + summary() : ''));
+      finish();
+      return;
+    }
+    // done: free text after the lead is captured
+    var rr = answerFaq(text);
+    if (!rr) say('Thanks! I have passed that along to the team. For anything urgent, call ' + PHONE + '.');
+    later(function () { quick([CALL, { t: 'Add property details', href: '#get-started' }]); });
   }
   function toggleChat(open) {
     chat.open = open; chatPanel.classList.toggle('hidden', !open); chatLauncher.classList.toggle('hidden', open);
