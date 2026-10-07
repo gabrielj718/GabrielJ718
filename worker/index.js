@@ -32,10 +32,11 @@ export default {
     const name = clean(d.name, 120);
     const email = clean(d.email, 200);
     const phone = clean(d.phone, 40);
-    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return json({ ok: false, error: 'invalid' }, 400, cors);
+    if (!name || !(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || phone)) return json({ ok: false, error: 'invalid' }, 400, cors);
 
     const [firstName, ...rest] = name.split(/\s+/);
     const lastName = rest.join(' ');
+    const isChat = d.formType === 'chat-lead' || d.formType === 'chat-details';
     const isQualification = d.formType === 'property-qualification';
     const county = clean(d.county, 60);
     const services = [].concat(d.services || []).map((s) => clean(s, 60)).filter(Boolean);
@@ -53,9 +54,11 @@ export default {
           `In-house services of interest: ${services.join(', ') || 'None selected'}`,
           `Notes: ${clean(d.notes, 800) || 'None'}`,
         ]
+      : isChat
+      ? [`WEBSITE CHAT (${d.formType === 'chat-details' ? 'follow-up details' : 'new lead'})`, `Topic: ${clean(d.topic, 80)}`, `Message: ${clean(d.message, 800) || 'None yet'}`]
       : ['GENERAL INFORMATION REQUEST (GB Home Rentals website)', `Message: ${clean(d.message, 800)}`];
 
-    const tags = ['GB Home Rentals', 'Website Lead', isQualification ? 'Owner Qualification' : 'Owner Inquiry'];
+    const tags = ['GB Home Rentals', 'Website Lead', isQualification ? 'Owner Qualification' : isChat ? 'Chat Lead' : 'Owner Inquiry'];
     if (county) tags.push(`${county} County`);
     services.forEach((s) => tags.push(`Interest: ${s}`));
 
@@ -67,7 +70,7 @@ export default {
       person: {
         firstName,
         lastName,
-        emails: [{ value: email }],
+        emails: email ? [{ value: email }] : [],
         phones: phone ? [{ value: phone }] : [],
         tags,
       },
