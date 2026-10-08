@@ -600,7 +600,9 @@
   }
   // ---- Chat widget: guided conversation that captures every visitor as a lead ----
   var PHONE = '(850) 555-0123', PHONE_HREF = 'tel:+18505550123';
-  var chat = { open: false, started: false, step: 'topic', flow: '', qi: 0, data: {}, answers: [], sent: false };
+  // AI answers come from the same Worker as the leads (POST <FORM_ENDPOINT>/chat). Without an endpoint, the scripted chat is used.
+  var CHAT_ENDPOINT = FORM_ENDPOINT ? FORM_ENDPOINT.replace(/\/+$/, '') + '/chat' : '';
+  var chat = { open: false, started: false, step: 'topic', flow: '', qi: 0, data: {}, answers: [], sent: false, history: [], aiDown: false };
   var chatPanel = document.getElementById('chatPanel'), chatLauncher = document.getElementById('chatLauncher');
   var chatLog = document.getElementById('chatLog'), chatQuick = document.getElementById('chatQuick');
   var chatForm = document.getElementById('chatForm'), chatInput = document.getElementById('chatInput');
@@ -659,6 +661,28 @@
     });
   }
   function later(fn) { queue = queue.then(function () { fn(); }); }
+  // Ask the AI assistant. Calls ok() after its reply is shown, or fail() if the AI is unavailable.
+  function askAI(text, ok, fail) {
+    if (!CHAT_ENDPOINT || chat.aiDown) { fail(); return; }
+    chat.history.push({ role: 'user', text: text });
+    var p = fetch(CHAT_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chat.history.slice(-12) }) })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (j) { if (!j || !j.reply) throw new Error('empty'); return j.reply; });
+    queue = queue.then(function () {
+      return new Promise(function (res) {
+        var t = document.createElement('div'); t.className = 'flex';
+        t.innerHTML = '<div class="px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-white border border-slate-200 text-slate-400 tracking-widest" aria-hidden="true">&bull;&bull;&bull;</div>';
+        chatLog.appendChild(t); chatLog.scrollTop = chatLog.scrollHeight;
+        p.then(function (reply) {
+          t.remove(); bubble(reply, 'bot'); chat.history.push({ role: 'model', text: reply }); ok(); res();
+        }).catch(function () {
+          t.remove(); chat.history.pop(); chat.aiDown = true; fail(); res();
+        });
+      });
+    });
+  }
+  function wantsAI(text) { return !!CHAT_ENDPOINT && !chat.aiDown && (/\?/.test(text) || text.length > 40 || /^(what|how|why|when|where|who|can|do|does|is|are|will|should|could)\b/i.test(text)); }
+  var AI_CHIPS = ['Get my free analysis', 'Leave my contact info', CALL];
   function quick(options) {
     chatQuick.innerHTML = '';
     chatQuick.classList.toggle('hidden', !options.length);
@@ -714,13 +738,25 @@
     later(function () { quick([CALL, { t: 'Add property details', href: '#get-started' }]); });
   }
 
+  function aiFallback() {
+    chat.step = 'free';
+    say('Sorry, I cannot answer that just now. Tell me what you need and I will pass it to the team, or call us.');
+    later(function () { quick([CALL]); setInput('Type your question…'); });
+  }
+
   function handle(text) {
     text = String(text).trim(); if (!text) return;
     bubble(text, 'me'); quick([]);
     var d = chat.data, f = FLOWS[chat.flow];
 
+    if (chat.step === 'topic' && TOPICS.indexOf(text) === -1 && !/^(get my free analysis|leave my contact info)$/i.test(text) && wantsAI(text)) {
+      d.topic = 'Other'; chat.step = 'ai';
+      askAI(text, function () { later(function () { quick(AI_CHIPS); setInput('Ask me anything…', 'text', false); }); }, function () { aiFallback(); });
+      return;
+    }
     if (chat.step === 'topic') {
-      if (/tenant/i.test(text)) {
+      if (/^leave my contact info$/i.test(text)) { d.topic = 'Other'; askContact(); }
+      else if (/tenant/i.test(text)) {
         chat.step = 'tenant'; d.topic = 'Current tenant';
         say('Happy to help. What do you need?');
         later(function () { quick(['Report a repair', 'Rent or payment question', 'Lease question', 'Emergency']); });
@@ -731,10 +767,20 @@
         later(function () { quick(['Get my free analysis', CALL]); });
         chat.step = 'topic';
       } else {
-        d.topic = 'Other'; chat.step = 'free';
-        say('Sure, tell me a bit about what you need and I will point you in the right direction.');
-        later(function () { setInput('Type your question…'); });
+        d.topic = 'Other'; chat.step = (CHAT_ENDPOINT && !chat.aiDown) ? 'ai' : 'free';
+        say('Sure, ask me anything about managing or repairing a rental and I will point you in the right direction.');
+        later(function () { quick(chat.step === 'ai' ? AI_CHIPS : []); setInput('Type your question…', 'text', chat.step !== 'ai'); });
       }
+      return;
+    }
+    if (chat.step === 'ai') {
+      if (/^get my free analysis$/i.test(text)) { begin('owner'); return; }
+      if (/^leave my contact info$/i.test(text)) {
+        var said = chat.history.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' / ').slice(0, 400);
+        if (said) chat.answers.push(['Conversation', said]);
+        say('Happy to. A team member will follow up personally.'); askContact(); return;
+      }
+      askAI(text, function () { later(function () { quick(AI_CHIPS); }); }, function () { aiFallback(); });
       return;
     }
     if (chat.step === 'tenant') {
@@ -756,6 +802,11 @@
     if (chat.step === 'q') {
       var q = f.qs[chat.qi];
       var chip = q.o.some(function (o) { return o.toLowerCase() === text.toLowerCase(); });
+      if (!chip && wantsAI(text)) {
+        var reask = function () { say('Back to your question: ' + q.q); later(function () { quick(q.o); }); };
+        askAI(text, reask, function () { chat.answers.push(['Question', text]); say('I will make sure the team answers that.'); reask(); });
+        return;
+      }
       if (!chip) {
         var r = answerFaq(text);
         if (r) {
@@ -803,6 +854,7 @@
       return;
     }
     // done: free text after the lead is captured
+    if (wantsAI(text)) { askAI(text, function () { later(function () { quick([CALL, { t: 'Add property details', href: '#get-started' }]); }); }, function () { say('Thanks! I have passed that along to the team. For anything urgent, call ' + PHONE + '.'); }); return; }
     var rr = answerFaq(text);
     if (!rr) say('Thanks! I have passed that along to the team. For anything urgent, call ' + PHONE + '.');
     later(function () { quick([CALL, { t: 'Add property details', href: '#get-started' }]); });
