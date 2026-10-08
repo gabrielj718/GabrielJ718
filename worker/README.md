@@ -28,3 +28,16 @@ Set up an Action Plan or Smart List in Follow Up Boss keyed on the `GB Home Rent
 ## Address autocomplete
 In Google Cloud, enable **Places API (New)** and **Maps JavaScript API**, create an API key, restrict it to your site's
 domain under HTTP referrers, and paste it into `GOOGLE_MAPS_API_KEY` in `index.html`.
+
+## AI chat (Gemini)
+The website chat can answer free-form questions with Google Gemini. It uses the same Worker at `POST /chat`.
+1. Create a key at https://aistudio.google.com (Get API key) and set a spending limit in Google Cloud if you enable billing.
+2. Store it as a secret (never in the code or the HTML):
+   ```
+   cd worker
+   npx wrangler secret put GEMINI_API_KEY
+   npx wrangler deploy
+   ```
+3. `GEMINI_MODEL` and `PHONE_DISPLAY` live in `wrangler.toml`. If Google retires the model, change `GEMINI_MODEL`.
+
+The AI only runs when `FORM_ENDPOINT` in `index.html` points at this Worker. If the AI is unavailable or the key is missing, the chat falls back to its built-in guided questions. The assistant is told not to quote fees or give legal advice, and each visitor is limited to about 12 messages a minute (best effort). Rotate the key in Google if it is ever exposed.
